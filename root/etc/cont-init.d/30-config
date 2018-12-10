@@ -1,0 +1,41 @@
+#!/usr/bin/with-contenv bash
+set -e
+SERVERNAME=${SERVERNAME:-localhost}
+TLS=${TLS:-no}
+
+if [ $TLS == "yes" ]; then
+  if [ ! -d /etc/apache2/tls ]; then
+    mkdir /etc/apache2/tls
+    chown -R www-data:root /etc/apache2/tls
+  fi
+  SUBJECT="/C=DE/ST=Berlin/L=Berlin/O=$SERVERNAME/OU=mahara Server/CN=*"
+  if [[ -f /etc/apache2/tls/cert.key && -f /etc/apache2/tls/cert.crt ]]; then
+    echo "using keys found in /etc/apache2/tls"
+  else
+    echo "generating self-signed keys in /etc/apache2/tls, you can replace these with your own keys if required"
+    openssl req -new -x509 -days 3650 -nodes -out /etc/apache2/tls/cert.crt -keyout /etc/apache2/tls/cert.key -subj "$SUBJECT"
+  fi
+  sed -i 's*/etc/ssl/certs/ssl-cert-snakeoil.pem*/etc/apache2/tls/cert.key*g' /etc/apache2/sites-available/default-ssl.conf
+  sed -i 's*/etc/ssl/private/ssl-cert-snakeoil.key*/etc/apache2/tls/cert.crt*g' /etc/apache2/sites-available/default-ssl.conf
+  a2ensite default-ssl
+fi
+
+echo "ServerName $SERVERNAME" > /etc/apache2/conf-available/servername.conf
+a2enconf servername
+
+if [ ! -d /etc/mahara ]; then
+   mkdir -p /etc/mahara
+   chown -R www-data:www-data /etc/mahara
+   chmod g+s,g+w /etc/mahara 
+fi
+
+if [ ! -f /etc/mahara/config.php ]; then
+   cp /var/www/html/config-dist.php /etc/mahara/config.php
+   chown -R www-data:www-data /etc/mahara/config.php
+fi
+
+if [ ! -f /var/www/html/config.php ]; then
+   s6-ln -s /etc/mahara/config.php /var/www/html/config.php 
+fi
+
+exit 0
