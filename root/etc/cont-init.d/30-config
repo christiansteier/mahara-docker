@@ -1,4 +1,4 @@
-#!/usr/bin/with-contenv bash7
+#!/usr/bin/with-contenv bash
 set -e
 SERVERNAME=${SERVERNAME:-localhost}
 TLS=${TLS:-no}
