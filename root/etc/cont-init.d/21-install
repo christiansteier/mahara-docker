@@ -195,10 +195,15 @@ fi
 echo -e "#Mahara\n*/5 * * * * s6-envuidgid www-data /usr/local/bin/php $MAHARADIR/lib/cron.php >> /data/mahara.log 2>&1" > /mahara
 crontab /mahara && rm /mahara
 
+# Additional scripts
 EXTRA=/extra-scripts
 if [ -d "$EXTRA" ]; then
-  /bin/run-parts --verbose "$EXTRA"
+  for file in $EXTRA/*; do
+      [ -f "$file" ] && [ -x "$file" ] && "$file"
+  done
 fi
 
+# Self-destruction
 rm /etc/cont-init.d/21-install
+
 exit 0
