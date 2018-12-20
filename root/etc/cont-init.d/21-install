@@ -50,13 +50,9 @@ if version_gt $APPVERSION $INSTALLED_VERSION; then
        exit 0
      fi
      echo -e "\n[i] Copy Mahara $APPVERSION to the working folder $MAHARADIR\n"
-     rsync -rlDog --chown www-data:root --delete /usr/src/mahara/ $MAHARADIR/
+     rsync -rlDog --chown www-data:root --inplace --delete /usr/src/mahara/ $MAHARADIR/
   else
-     rsync -rlDog --chown www-data:root --delete /usr/src/mahara/ $MAHARADIR/
-  fi
-
-  if [ ! -d $MAHARADIR/config ]; then
-     mkdir -p $MAHARADIR/config
+     rsync -rlDog --chown www-data:root --inplace --delete /usr/src/mahara/ $MAHARADIR/
   fi
 
 if [ ! -d /data ]; then
@@ -138,35 +134,34 @@ EOF
     ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST:-127.0.0.1}
     DEBUG=${DEBUG:-yes}
 
-    if [ ! -f /etc/mahara/config.php ]; then
-       echo -e "\n[i] Copy config-dist.php to /etc/mahara/config.php and link to it"
-       cp -a $MAHARADIR/config-dist.php /etc/mahara/config.php
-       sed -i "s|dbtype   = 'postgres'|dbtype = '$DBTYPE'|g" /etc/mahara/config.php
-       sed -i "s|dbname   = ''|dbname = '$APPDB'|g" /etc/mahara/config.php
-       sed -i "s|dbuser   = ''|dbuser = '$APPDBUSER'|g" /etc/mahara/config.php
-       sed -i "s|dbpass   = ''|dbpass = '$APPDBPASS'|g" /etc/mahara/config.php
-       sed -i "s|dbhost   = 'localhost'|dbhost = '$MYSQL_HOST'|g" /etc/mahara/config.php
-       sed -i 's|\/\/ \$cfg->wwwroot|\$cfg->wwwroot|g' /etc/mahara/config.php
-       sed -i "s|wwwroot = 'https:\/\/myhost.com\/mahara\/'|wwwroot = 'http:\/\/$SERVERNAME\/'|g" /etc/mahara/config.php
-       sed -i "s|dataroot = '\/path\/to\/uploaddir'|dataroot = '\/data'|g" /etc/mahara/config.php
-       sed -i 's|\/\/ \$cfg->passwordsaltmain|\$cfg->passwordsaltmain|g' /etc/mahara/config.php
-       sed -i "s|passwordsaltmain = 'some long random string here with lots of characters'|passwordsaltmain = '$APPSALD'|g" /etc/mahara/config.php
-       sed -i "s|emailcontact = ''|emailcontact = '$APPADMINEMAIL'|g" /etc/mahara/config.php
+    if [ ! -f /config/mahara/config.php ]; then
+       echo -e "\n[i] Copy config-dist.php to /config/mahara/config.php and link to it"
+       cp -a $MAHARADIR/config-dist.php /config/mahara/config.php
+       sed -i "s|dbtype   = 'postgres'|dbtype = '$DBTYPE'|g" /config/mahara/config.php
+       sed -i "s|dbname   = ''|dbname = '$APPDB'|g" /config/mahara/config.php
+       sed -i "s|dbuser   = ''|dbuser = '$APPDBUSER'|g" /config/mahara/config.php
+       sed -i "s|dbpass   = ''|dbpass = '$APPDBPASS'|g" /config/mahara/config.php
+       sed -i "s|dbhost   = 'localhost'|dbhost = '$MYSQL_HOST'|g" /config/mahara/config.php
+       sed -i 's|\/\/ \$cfg->wwwroot|\$cfg->wwwroot|g' /config/mahara/config.php
+       sed -i "s|wwwroot = 'https:\/\/myhost.com\/mahara\/'|wwwroot = 'http:\/\/$SERVERNAME\/'|g" /config/mahara/config.php
+       sed -i "s|dataroot = '\/path\/to\/uploaddir'|dataroot = '\/data'|g" /config/mahara/config.php
+       sed -i 's|\/\/ \$cfg->passwordsaltmain|\$cfg->passwordsaltmain|g' /config/mahara/config.php
+       sed -i "s|passwordsaltmain = 'some long random string here with lots of characters'|passwordsaltmain = '$APPSALD'|g" /config/mahara/config.php
+       sed -i "s|emailcontact = ''|emailcontact = '$APPADMINEMAIL'|g" /config/mahara/config.php
        if [ $CLEANURL = "yes" ]; then
-          sed -i "s#\/\/ closing php tag intentionally omitted to prevent whitespace issues#\n\$cfg->cleanurls = true;\n\$cfg->cleanurlinvalidcharacters = '/[^a-zA-Z0-9]+/';\n\$cfg->cleanurlvalidate = '/^[a-z0-9-]*\$/';\n\$cfg->cleanurlusereditable = true;\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /etc/mahara/config.php
+          sed -i "s#\/\/ closing php tag intentionally omitted to prevent whitespace issues#\n\$cfg->cleanurls = true;\n\$cfg->cleanurlinvalidcharacters = '/[^a-zA-Z0-9]+/';\n\$cfg->cleanurlvalidate = '/^[a-z0-9-]*\$/';\n\$cfg->cleanurlusereditable = true;\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /config/mahara/config.php
           echo -e "<IfModule mod_rewrite.c>\n   RewriteEngine on\n   RewriteRule ^user/([a-z0-9-]+)/?$ ${MAHARADIR}/user/view.php?profile=\$1&%{QUERY_STRING}\n   RewriteRule ^user/([a-z0-9-]+)/([a-z0-9-]+)/?$ ${MAHARADIR}/view/view.php?profile=\$1&page=\$2&%{QUERY_STRING}\n   RewriteRule ^group/([a-z0-9-]+)/?$ ${MAHARADIR}/group/view.php?homepage=\$1&%{QUERY_STRING}\n   RewriteRule ^group/([a-z0-9-]+)/([a-z0-9-]+)/?$ ${MAHARADIR}/view/view.php?homepage=\$1&page=\$2&%{QUERY_STRING}\n</IfModule>" > $MAHARADIR/.htaccess
           chown www-data:www-data $MAHARADIR/.htaccess
        fi
        if [ $ELASTICSEARCH = "yes" ]; then
-        sed -i "s#\/\/ closing php tag intentionally omittedto prevent whitespace issues#\n\n\$cfg->plugin_search_elasticsearch_host = '$ELASTICSEARCH_HOST';\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /etc/mahara/config.php
+        sed -i "s#\/\/ closing php tag intentionally omittedto prevent whitespace issues#\n\n\$cfg->plugin_search_elasticsearch_host = '$ELASTICSEARCH_HOST';\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /config/mahara/config.php
        fi
        if [ $DEBUG = "yes" ]; then
-          sed -i "s#\/\/ closing php tag intentionally omitted to prevent whitespace issues#\n\n\$cfg->log_dbg_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_info_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_warn_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_environ_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /etc/mahara/config.php
+          sed -i "s#\/\/ closing php tag intentionally omitted to prevent whitespace issues#\n\n\$cfg->log_dbg_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_info_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_warn_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\$cfg->log_environ_targets = LOG_TARGET_SCREEN | LOG_TARGET_ERRORLOG;\n\n\/\/ closing php tag intentionally omitted to prevent whitespace issues#g" /config/mahara/config.php
        fi
-       s6-ln -s /etc/mahara/config.php $MAHARADIR/config.php
     fi
-
-    chown -R www-data:www-data /etc/mahara $MAHARADIR  
+    s6-ln -s /config/mahara/config.php  $MAHARADIR/config.php
+    chown -R www-data:www-data /config/mahara $MAHARADIR  
 
     s6-envuidgid www-data php $MAHARADIR/admin/cli/install.php \
 	--adminpassword="$APPADMINPASS" \
@@ -174,10 +169,10 @@ EOF
 
     TLS=${TLS:-no}
     if [ $TLS == "yes" ]; then
-      sed -i "s*http://${SERVERNAME}*https://${SERVERNAME}*g" /etc/mahara/config.php
+      sed -i "s*http://${SERVERNAME}*https://${SERVERNAME}*g" /config/mahara/config.php
       
       if [ ! $SUBDIR = "" ]; then
-        sed -i "s*https://${SERVERNAME}*https://${SERVERNAME}/$SUBDIR*g" /etc/mahara/config.php
+        sed -i "s*https://${SERVERNAME}*https://${SERVERNAME}/$SUBDIR*g" /config/mahara/config.php
         echo -e "\n[i] Set automatic configuration:\n  Admin = $APPADMIN \n  Pass = $APPADMINPASS \n  www_root: https://${SERVERNAME}/$SUBDIR \n---\n"
       else
         echo -e "\n[i] Set automatic configuration:\n  Admin = $APPADMIN \n  Pass = $APPADMINPASS \n  www_root: https://${SERVERNAME} \n---\n"
@@ -186,7 +181,7 @@ EOF
     else
     
       if [ ! $SUBDIR = "" ]; then
-        sed -i "s*http://${SERVERNAME}*http://${SERVERNAME}/$SUBDIR*g" /etc/mahara/config.php
+        sed -i "s*http://${SERVERNAME}*http://${SERVERNAME}/$SUBDIR*g" /config/mahara/config.php
         echo -e "\n[i] Set automatic configuration:\n  Admin = $APPADMIN \n  Pass = $APPADMINPASS \n  www_root: http://${SERVERNAME}/$SUBDIR \n---\n"
       else
         echo -e "\n[i] Set automatic configuration:\n  Admin = $APPADMIN \n  Pass = $APPADMINPASS \n  www_root: http://${SERVERNAME} \n---\n"
