@@ -1,8 +1,8 @@
 FROM php:7.1-fpm-stretch
 LABEL maintainer="Christian-Maximilian Steier"
 
-ARG VERSION=18.10
-ARG RELEASE=.0
+ARG VERSION=19.04
+ARG RELEASE=.1
 
 ARG WEB_USER=www-data
 ARG WEB_GROUP=www-data
