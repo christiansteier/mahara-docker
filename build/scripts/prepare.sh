@@ -56,7 +56,7 @@ dpkg-reconfigure locales
 locale-gen "en_US.UTF-8"
 echo -n en_US.UTF-8 > /etc/container_environment/LANG
 
-# Install rsync
-$minimal_apt_get_install rsync
+# Install rsync & netcat
+$minimal_apt_get_install rsync netcat
 
 exit 0
