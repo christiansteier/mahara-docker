@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-source /scripts/buildconfig
 
 echo -e "\n[i] Install PHP-Extensions\n"
 mv /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini
@@ -36,29 +35,30 @@ $minimal_apt_get_install \
     $PACKAGES_LDAP
 
 debMultiarch="$(dpkg-architecture --query DEB_BUILD_MULTIARCH)"
-docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-png-dir=/usr --with-jpeg-dir=/usr
-docker-php-ext-configure ldap --with-libdir="lib/$debMultiarch"
 docker-php-ext-install \
 	exif \
-	fileinfo \
-        gd \
         intl \
-	json \
-        ldap \
-	mbstring \
 	opcache \
 	pcntl \
 	mysqli \
-	pdo \
         pdo_mysql \
         pdo_pgsql \
-        pdo_sqlite \
-	session \
-	simplexml \
 	soap \
 	xsl \
 	xmlrpc \
 	zip
+
+# Mcrypt
+pecl install mcrypt-1.0.1
+docker-php-ext-enable mcrypt
+
+# GD
+docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-png-dir=/usr --with-jpeg-dir=/usr
+docker-php-ext-install gd
+
+# LDAP
+docker-php-ext-configure ldap --with-libdir="lib/$debMultiarch"
+docker-php-ext-install ldap
 
 # Memcached, Redis, APCu, igbinary.
 pecl install memcached redis apcu igbinary
@@ -69,11 +69,7 @@ pecl install imagick
 docker-php-ext-enable imagick
 
 # Additional PHP modules
-docker-php-ext-install iconv mcrypt pspell
-
-# Microsoft SQL Server Driver
-pecl install sqlsrv
-docker-php-ext-enable sqlsrv
+docker-php-ext-install pspell
 
 # set recommended PHP.ini settings
 echo 'opcache.enable=1' >> /usr/local/etc/php/conf.d/opcache-recommended.ini

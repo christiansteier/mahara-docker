@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-source /scripts/buildconfig
 
 echo -e "\n[i] Prepare System\n" 
 # Do not cache apt packages 
