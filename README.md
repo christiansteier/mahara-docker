@@ -1,7 +1,7 @@
 docker-mahara [![No Maintenance Intended](http://unmaintained.tech/badge.svg)](http://unmaintained.tech/)
 =============
 
-Docker image of Mahara with [s6-overlay](https://github.com/just-containers/s6-overlay) and [socklog-overlay](https://github.com/just-containers/socklog-overlay) for use with an external Database.
+Docker image of Mahara with [s6-overlay](https://github.com/just-containers/s6-overlay) for use with an external Database.
 
 ## Environment variables
 
